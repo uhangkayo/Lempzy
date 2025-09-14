@@ -19,6 +19,8 @@ Lempzy will also optimize the configuration within The LEMP Stack.
 * OpenSSL - Applications that secure communications over computer networks against eavesdropping or need to identify the party at the other end.
   * Free SSL certificates from Let's Encrypt
 * Interactive menu for convenient
+* User confirmation before each installation step
+* Ability to select PHP, MariaDB or MySQL versions during setup
 
 ## Installation List
 Here all the list that the script will install

@@ -27,13 +27,6 @@ sitesEnable='/etc/nginx/sites-enabled/'
 sitesAvailable='/etc/nginx/sites-available/'
 domainRegex="^[a-zA-Z0-9]"
 
-# Determine available database client
-DB_CLIENT=$(command -v mysql || command -v mariadb)
-if [ -z "$DB_CLIENT" ]; then
-    echo "mysql or mariadb client not found. Please install a database client first."
-    exit 1
-fi
-
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
@@ -86,7 +79,7 @@ create_database() {
      echo "Type the password for your new $domain database [eg, password123_$domainClear2]"
      echo -n "followed by [ENTER]: "
      read PASS
-         $DB_CLIENT -uroot <<MYSQL_SCRIPT
+          mysql -uroot <<MYSQL_SCRIPT
           CREATE DATABASE database_$domainClear2;
           CREATE USER 'user_$domainClear2'@'localhost' IDENTIFIED BY '$PASS';
           GRANT ALL PRIVILEGES ON database_$domainClear2.* TO 'user_$domainClear2'@'localhost';

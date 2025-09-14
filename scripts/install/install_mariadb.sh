@@ -19,7 +19,6 @@ install_mariadb() {
      echo ""
      sleep 3
      apt-get update
-     apt-get install -y mariadb-server-${MARIADB_VERSION}
      echo ""
      sleep 1
 }

@@ -55,4 +55,4 @@ cd
 *Lempzy - V1.3*
 
 ## License
-Copyright 2022. Code released under the MIT license.
+Copyright 2025. Code released under the MIT license.

@@ -74,180 +74,72 @@ echo " *   *    *****     ***      ***     *****    *****      *      *****     
 echo "******************************************************************************************"
 echo ""
 
-# Update os
-UPDATE_OS=scripts/install/update_os.sh
+# Prompt for component versions and selections
+read -p "Enter desired PHP version (e.g. 8.2) [default: 8.2]: " PHP_VERSION
+PHP_VERSION=${PHP_VERSION:-8.2}
+export PHP_VERSION
 
-if test -f "$UPDATE_OS"; then
-     source $UPDATE_OS
-     cd && cd && cd Lempzy
+read -p "Choose database engine (mariadb/mysql) [mariadb]: " DB_ENGINE
+DB_ENGINE=${DB_ENGINE,,}
+DB_ENGINE=${DB_ENGINE:-mariadb}
+if [[ "$DB_ENGINE" == "mysql" ]]; then
+    read -p "Enter MySQL version (e.g. 8.0) [default: 8.0]: " MYSQL_VERSION
+    MYSQL_VERSION=${MYSQL_VERSION:-8.0}
+    export MYSQL_VERSION
 else
-     echo "Cannot Update OS"
-     exit
+    read -p "Enter MariaDB version (e.g. 10.11) [default: 10.11]: " MARIADB_VERSION
+    MARIADB_VERSION=${MARIADB_VERSION:-10.11}
+    export MARIADB_VERSION
 fi
 
-# Installing UFW Firewall
-INSTALL_UFW_FIREWALL=scripts/install/install_firewall.sh
+confirm_step() {
+    while true; do
+        read -r -p "$1 [y/n]: " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
 
-if test -f "$INSTALL_UFW_FIREWALL"; then
-     source $INSTALL_UFW_FIREWALL
-     cd && cd Lempzy
+run_step() {
+    local action="$1"
+    local script_path="$2"
+    if test -f "$script_path"; then
+        if confirm_step "Proceed with $action?"; then
+            source "$script_path"
+            cd && cd Lempzy
+        else
+            echo "Skipping $action"
+        fi
+    else
+        echo "${red}Cannot $action${end}"
+        exit 1
+    fi
+}
+
+# Run installation steps with confirmations
+run_step "Update OS" scripts/install/update_os.sh
+run_step "Install UFW Firewall" scripts/install/install_firewall.sh
+if [[ "$DB_ENGINE" == "mysql" ]]; then
+    run_step "Install MySQL" scripts/install/install_mysql.sh
 else
-     echo "${red}Cannot Install UFW Firewall${end}"
-     exit
+    run_step "Install MariaDB" scripts/install/install_mariadb.sh
 fi
-
-# Install MariaDB
-INSTALL_MARIADB=scripts/install/install_mariadb.sh
-
-if test -f "$INSTALL_MARIADB"; then
-     source $INSTALL_MARIADB
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install MariaDB${end}"
-     exit
-fi
-
-# Install PHP And Configure PHP
-INSTALL_PHP=scripts/install/install_php.sh
-
-if test -f "$INSTALL_PHP"; then
-     source $INSTALL_PHP
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install PHP${end}"
-     exit
-fi
-
-# Install, Start, And Configure nginx
-INSTALL_NGINX=scripts/install/install_nginx.sh
-
-if test -f "$INSTALL_NGINX"; then
-     source $INSTALL_NGINX
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Nginx${end}"
-     exit
-fi
-
-# Install Memcached
-INSTALL_MEMCACHED=scripts/install/install_memcached.sh
-if test -f "$INSTALL_MEMCACHED"; then
-     source $INSTALL_MEMCACHED
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Memcached${end}"
-     exit
-fi
-
-# Install Ioncube
-INSTALL_IONCUBE=scripts/install/install_ioncube.sh
-
-if test -f "$INSTALL_IONCUBE"; then
-     source $INSTALL_IONCUBE
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Ioncube${end}"
-     exit
-fi
-
-# Install Mcrypt
-INSTALL_MCRPYT=scripts/install/install_mcrpyt.sh
-
-if test -f "$INSTALL_MCRPYT"; then
-     source $INSTALL_MCRPYT
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Mcrypt${end}"
-     exit
-fi
-
-# Install HTOP
-INSTALL_HTOP=scripts/install/install_htop.sh
-
-if test -f "$INSTALL_HTOP"; then
-     source $INSTALL_HTOP
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install HTOP${end}"
-     exit
-fi
-
-# Install Netstat
-INSTALL_NETSTAT=scripts/install/install_netstat.sh
-
-if test -f "$INSTALL_NETSTAT"; then
-     source $INSTALL_NETSTAT
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Netstat${end}"
-     exit
-fi
-
-# Install OpenSSL
-INSTALL_OPENSSL=scripts/install/install_openssl.sh
-
-if test -f "$INSTALL_OPENSSL"; then
-     source $INSTALL_OPENSSL
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install OpenSSL${end}"
-     exit
-fi
-
-# Install AB BENCHMARKING TOOL
-INSTALL_AB=scripts/install/install_ab.sh
-
-if test -f "$INSTALL_AB"; then
-     source $INSTALL_AB
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install AB BENCHMARKING TOOL${end}"
-     exit
-fi
-
-# Install ZIP AND UNZIP
-INSTALL_ZIPS=scripts/install/install_zips.sh
-
-if test -f "$INSTALL_ZIPS"; then
-     source $INSTALL_ZIPS
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install ZIP AND UNZIP${end}"
-     exit
-fi
-
-# Install FFMPEG and IMAGEMAGICK
-INSTALL_FFMPEG=scripts/install/install_ffmpeg.sh
-
-if test -f "$INSTALL_FFMPEG"; then
-     source $INSTALL_FFMPEG
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install ZIP AND UNZIP${end}"
-     exit
-fi
-
-# Install Git And Curl
-INSTALL_GIT=scripts/install/install_git.sh
-
-if test -f "$INSTALL_GIT"; then
-     source $INSTALL_GIT
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Git And Curl${end}"
-     exit
-fi
-
-# Install Composer
-INSTALL_COMPOSER=scripts/install/install_composer.sh
-
-if test -f "$INSTALL_COMPOSER"; then
-     source $INSTALL_COMPOSER
-     cd && cd Lempzy
-else
-     echo "${red}Cannot Install Composer${end}"
-     exit
-fi
+run_step "Install PHP" scripts/install/install_php.sh
+run_step "Install Nginx" scripts/install/install_nginx.sh
+run_step "Install Memcached" scripts/install/install_memcached.sh
+run_step "Install Ioncube" scripts/install/install_ioncube.sh
+run_step "Install Mcrypt" scripts/install/install_mcrpyt.sh
+run_step "Install HTOP" scripts/install/install_htop.sh
+run_step "Install Netstat" scripts/install/install_netstat.sh
+run_step "Install OpenSSL" scripts/install/install_openssl.sh
+run_step "Install AB BENCHMARKING TOOL" scripts/install/install_ab.sh
+run_step "Install ZIP AND UNZIP" scripts/install/install_zips.sh
+run_step "Install FFMPEG and IMAGEMAGICK" scripts/install/install_ffmpeg.sh
+run_step "Install Git And Curl" scripts/install/install_git.sh
+run_step "Install Composer" scripts/install/install_composer.sh
 
 # Change Login Greeting
 change_login_greetings() {

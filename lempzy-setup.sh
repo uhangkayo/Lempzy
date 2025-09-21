@@ -35,24 +35,64 @@ mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 end=$'\e[0m'
 
-# Detect the operating system version.  In addition to the historical
-# releases that Lempzy supported (Debian 10/11 and Ubuntu 18.04/20.04/22.04/22.10),
-# we now support newer Debian (12 and 13) and Ubuntu (24.04) releases.
-OS_VERSION=$(lsb_release -rs)
+detect_os_metadata() {
+    if [[ -r /etc/os-release ]]; then
+        # shellcheck disable=SC1091
+        . /etc/os-release
+        OS_ID=${ID,,}
+        OS_VERSION=${VERSION_ID}
+        OS_CODENAME=${VERSION_CODENAME:-}
+    fi
 
-# Reject unsupported versions early.  Note that we treat Debian releases as
-# integer strings (e.g. "12") and Ubuntu releases as dotted strings
-# (e.g. "24.04").  If your version isn't recognised here, the installer
-# will abort with a friendly message.  Update this list when adding
-# support for new distributions.
-if [[ "${OS_VERSION}" != "10" ]] && [[ "${OS_VERSION}" != "11" ]] && \
-   [[ "${OS_VERSION}" != "12" ]] && [[ "${OS_VERSION}" != "13" ]] && \
-   [[ "${OS_VERSION}" != "18.04" ]] && [[ "${OS_VERSION}" != "20.04" ]] && \
-   [[ "${OS_VERSION}" != "22.04" ]] && [[ "${OS_VERSION}" != "22.10" ]] && \
-   [[ "${OS_VERSION}" != "24.04" ]]; then
-     echo -e "${red}Sorry, this script is designed for DEBIAN (10, 11, 12, 13) and UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)${end}"
-     exit 1
+    if command -v lsb_release >/dev/null 2>&1; then
+        [[ -z ${OS_ID:-} ]] && OS_ID=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+        [[ -z ${OS_VERSION:-} ]] && OS_VERSION=$(lsb_release -rs)
+        [[ -z ${OS_CODENAME:-} ]] && OS_CODENAME=$(lsb_release -cs)
+    fi
+
+    if [[ -z ${OS_ID:-} ]] || [[ -z ${OS_VERSION:-} ]]; then
+        return 1
+    fi
+
+    export OS_ID OS_VERSION OS_CODENAME
+    return 0
+}
+
+if ! detect_os_metadata; then
+    echo -e "${red}Unable to detect the operating system. Lempzy currently supports Debian (10, 11, 12, 13) and Ubuntu (18.04, 20.04, 22.04, 22.10, 24.04).${end}"
+    exit 1
 fi
+
+is_supported_version() {
+    local version="$1"
+    shift
+    for supported in "$@"; do
+        if [[ "$supported" == "$version" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+case "$OS_ID" in
+    debian)
+        SUPPORTED_OS_VERSIONS=("10" "11" "12" "13")
+        ;;
+    ubuntu)
+        SUPPORTED_OS_VERSIONS=("18.04" "20.04" "22.04" "22.10" "24.04")
+        ;;
+    *)
+        echo -e "${red}Sorry, this script is designed for DEBIAN (10, 11, 12, 13) and UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04).${end}"
+        exit 1
+        ;;
+esac
+
+if ! is_supported_version "$OS_VERSION" "${SUPPORTED_OS_VERSIONS[@]}"; then
+    echo -e "${red}Sorry, this script is designed for DEBIAN (10, 11, 12, 13) and UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04).${end}"
+    exit 1
+fi
+
+SUPPORTED_PHP_VERSIONS=("7.2" "7.3" "7.4" "8.1" "8.2" "8.3" "8.4")
 
 # To ensure script run as root
 if [ "$EUID" -ne 0 ]; then
@@ -77,6 +117,11 @@ echo ""
 # Prompt for component versions and selections
 read -p "Enter desired PHP version (e.g. 8.2) [default: 8.2]: " PHP_VERSION
 PHP_VERSION=${PHP_VERSION:-8.2}
+PHP_VERSION=$(echo "$PHP_VERSION" | tr -d '[:space:]')
+if ! is_supported_version "$PHP_VERSION" "${SUPPORTED_PHP_VERSIONS[@]}"; then
+    echo -e "${red}Unsupported PHP version. Supported versions are: ${SUPPORTED_PHP_VERSIONS[*]}.${end}"
+    exit 1
+fi
 export PHP_VERSION
 
 read -p "Choose database engine (mariadb/mysql) [mariadb]: " DB_ENGINE

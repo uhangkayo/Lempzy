@@ -61,6 +61,7 @@ detect_os_metadata() {
 if ! detect_os_metadata; then
     echo -e "${red}Unable to detect the operating system. Lempzy currently supports Debian (10, 11, 12, 13) and Ubuntu (18.04, 20.04, 22.04, 22.10, 24.04).${end}"
     exit 1
+
 fi
 
 is_supported_version() {
@@ -132,8 +133,13 @@ if [[ "$DB_ENGINE" == "mysql" ]]; then
     MYSQL_VERSION=${MYSQL_VERSION:-8.0}
     export MYSQL_VERSION
 else
-    read -p "Enter MariaDB version (e.g. 10.11) [default: 10.11]: " MARIADB_VERSION
-    MARIADB_VERSION=${MARIADB_VERSION:-10.11}
+    SUPPORTED_MARIADB_VERSIONS_PRETTY=${SUPPORTED_MARIADB_VERSIONS// /, }
+    read -p "Enter MariaDB version (available: ${SUPPORTED_MARIADB_VERSIONS_PRETTY}) [default: ${DEFAULT_MARIADB_VERSION}]: " MARIADB_VERSION
+    MARIADB_VERSION=${MARIADB_VERSION:-$DEFAULT_MARIADB_VERSION}
+    if ! is_supported_version "$MARIADB_VERSION" ${SUPPORTED_MARIADB_VERSIONS}; then
+        echo -e "${red}Unsupported MariaDB version for ${OS_ID^} ${OS_VERSION}. Supported versions are: ${SUPPORTED_MARIADB_VERSIONS_PRETTY}.${end}"
+        exit 1
+    fi
     export MARIADB_VERSION
 fi
 

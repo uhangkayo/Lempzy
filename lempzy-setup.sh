@@ -61,6 +61,7 @@ detect_os_metadata() {
 if ! detect_os_metadata; then
     echo -e "${red}Unable to detect the operating system. Lempzy currently supports Debian (10, 11, 12, 13) and Ubuntu (18.04, 20.04, 22.04, 22.10, 24.04).${end}"
     exit 1
+
 fi
 
 is_supported_version() {
@@ -93,78 +94,6 @@ if ! is_supported_version "$OS_VERSION" "${SUPPORTED_OS_VERSIONS[@]}"; then
 fi
 
 SUPPORTED_PHP_VERSIONS=("7.2" "7.3" "7.4" "8.1" "8.2" "8.3" "8.4")
-
-determine_supported_mariadb_versions() {
-    local -n _versions_ref=$1
-    local -n _default_ref=$2
-    local os_id="${OS_ID}"
-    local os_version="${OS_VERSION}"
-
-    case "$os_id" in
-        debian)
-            case "$os_version" in
-                10)
-                    _versions_ref=("10.6")
-                    _default_ref="10.6"
-                    ;;
-                11)
-                    _versions_ref=("10.6" "10.11" "11.4")
-                    _default_ref="10.11"
-                    ;;
-                12)
-                    _versions_ref=("10.6" "10.11" "11.4")
-                    _default_ref="10.11"
-                    ;;
-                13)
-                    _versions_ref=("11.4" "11.8")
-                    _default_ref="11.4"
-                    ;;
-                *)
-                    _versions_ref=("10.11")
-                    _default_ref="10.11"
-                    ;;
-            esac
-            ;;
-        ubuntu)
-            case "$os_version" in
-                18.04)
-                    _versions_ref=("10.6")
-                    _default_ref="10.6"
-                    ;;
-                20.04)
-                    _versions_ref=("10.6" "10.11")
-                    _default_ref="10.11"
-                    ;;
-                22.04|22.10)
-                    _versions_ref=("10.6" "10.11" "11.4")
-                    _default_ref="10.11"
-                    ;;
-                24.04)
-                    _versions_ref=("11.4" "11.8")
-                    _default_ref="11.4"
-                    ;;
-                *)
-                    _versions_ref=("10.11")
-                    _default_ref="10.11"
-                    ;;
-            esac
-            ;;
-        *)
-            _versions_ref=("10.11")
-            _default_ref="10.11"
-            ;;
-    esac
-}
-
-SUPPORTED_MARIADB_VERSIONS_ARR=()
-DEFAULT_MARIADB_VERSION=""
-determine_supported_mariadb_versions SUPPORTED_MARIADB_VERSIONS_ARR DEFAULT_MARIADB_VERSION
-if [[ ${#SUPPORTED_MARIADB_VERSIONS_ARR[@]} -eq 0 ]]; then
-    SUPPORTED_MARIADB_VERSIONS_ARR=("10.11")
-    DEFAULT_MARIADB_VERSION="10.11"
-fi
-SUPPORTED_MARIADB_VERSIONS="${SUPPORTED_MARIADB_VERSIONS_ARR[*]}"
-export DEFAULT_MARIADB_VERSION SUPPORTED_MARIADB_VERSIONS
 
 # To ensure script run as root
 if [ "$EUID" -ne 0 ]; then

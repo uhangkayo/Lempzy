@@ -11,8 +11,33 @@ mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 end=$'\e[0m'
 
-# Get OS Version
-OS_VERSION=$(lsb_release -rs)
+detect_os_metadata() {
+    if [[ -r /etc/os-release ]]; then
+        # shellcheck disable=SC1091
+        . /etc/os-release
+        OS_ID=${ID,,}
+        OS_VERSION=${VERSION_ID}
+    fi
+
+    if command -v lsb_release >/dev/null 2>&1; then
+        [[ -z ${OS_ID:-} ]] && OS_ID=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+        [[ -z ${OS_VERSION:-} ]] && OS_VERSION=$(lsb_release -rs)
+    fi
+
+    if [[ -z ${OS_ID:-} ]] || [[ -z ${OS_VERSION:-} ]]; then
+        return 1
+    fi
+
+    export OS_ID OS_VERSION
+    return 0
+}
+
+if [[ -z ${OS_ID:-} ]] || [[ -z ${OS_VERSION:-} ]]; then
+    detect_os_metadata || {
+        echo -e "${red}Unable to determine the operating system. Aborting update.${end}"
+        exit 1
+    }
+fi
 
 # Update os
 update_os() {
